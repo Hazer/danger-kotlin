@@ -10,6 +10,8 @@ object DangerKotlin {
         val dangerDSLPath = readLine()
 
         dangerDSLPath?.removePrefix("danger://dsl/")?.stripEndLine()?.let {
+            debug("dangerDSLPath without prefix $it")
+
             val outputPath = FileSystem.createTempDirectory("danger_out").let {
                 File(it.path, FILE_TMP_OUTPUT_JSON).path
             }

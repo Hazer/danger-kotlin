@@ -16,7 +16,7 @@ project.ext.artifactIdGitlab4j = 'gitlab4j-api'
 
 project.ext.versionCoroutines = '1.3.6'
 project.ext.groupIdCoroutines = 'org.jetbrains.kotlinx'
-project.ext.artifactIdCoroutines = 'kotlinx-coroutines-jdk8'
+project.ext.artifactIdCoroutines = 'kotlinx-coroutines-core'
 
 ext.utils = [
         moshi: "$groupIdMoshi:$artifactIdMoshiKotlin:$versionMoshi",

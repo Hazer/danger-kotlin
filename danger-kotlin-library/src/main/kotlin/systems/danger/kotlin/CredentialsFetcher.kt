@@ -1,34 +1,17 @@
-package systems.danger.cmd.utils.credentials
+package systems.danger.kotlin
 
-import systems.danger.utils.Environment
-
-internal fun GitLabAPICredentials.toJson(): String { // TODO: Move to a serialization lib
-    return """"gitlab": {"host": "$host", "token": "$token"}"""
-}
-
-data class GitLabAPICredentials(val host: String, val token: String)
-
-data class Credentials(
-    val gitlab: GitLabAPICredentials?,
-    val github: GitLabAPICredentials?,
-    val bitbucket: GitLabAPICredentials?
-) {
-    fun toArg() = "credentials={${listOfNotNull(github, gitlab, bitbucket).joinToString { it.toJson() }}}"
-}
-
-object CredentialsFetcher {
+internal object CredentialsFetcher {
     private val env = Environment
     private const val DEFAULT_GITLAB_HOST = "https://gitlab.com"
 
-    fun getCredentials(): Credentials? {
-        return Credentials(
-            gitlab = getGitLabAPICredentialsFromEnv(),
+    fun getCredentials(): Credentials =
+        Credentials(
+            gitlab = gitLabCredentials(),
             github = null,
             bitbucket = null
         )
-    }
 
-    private fun getGitLabAPICredentialsFromEnv(): GitLabAPICredentials {
+    fun gitLabCredentials(): GitLabAPICredentials {
         val envHost = env["DANGER_GITLAB_HOST"]
         val envCIAPI = env["CI_API_V4_URL"]
 
@@ -57,6 +40,20 @@ object CredentialsFetcher {
             }
         }
 
-        return GitLabAPICredentials(host = host, token = env["DANGER_GITLAB_API_TOKEN"] ?: "")
+        return GitLabAPICredentials(
+            host = host,
+            token = env["DANGER_GITLAB_API_TOKEN"] ?: ""
+        )
     }
 }
+
+internal data class GitLabAPICredentials(
+    val host: String,
+    val token: String
+)
+
+internal data class Credentials(
+    val gitlab: GitLabAPICredentials?,
+    val github: GitLabAPICredentials?,
+    val bitbucket: GitLabAPICredentials?
+)

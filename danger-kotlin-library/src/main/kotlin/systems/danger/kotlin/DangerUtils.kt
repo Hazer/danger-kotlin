@@ -1,9 +1,9 @@
 package systems.danger.kotlin
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
-import kotlin.system.exitProcess
-
 
 class DangerUtils {
     private val fileMap = mutableMapOf<FilePath, String>()
@@ -16,17 +16,28 @@ class DangerUtils {
      * don't have to include error handlings - an error will
      * exit evaluation entirely as it should only happen at dev-time.
      *
-     * @param path the file reference from git.modified/creasted/deleted etc
+     * @param path the file reference from git.modified/created/deleted etc
      * @return the file contents, or bails
      */
     suspend fun readFile(path: FilePath): String {
         fileMap[path]?.let { contents -> return contents }
 
         // Otherwise grab it from the FS
-        val file = File(path).takeIf { it.exists() } ?: throw FileNotFoundException("File with $path not found.")
+        return withContext(Dispatchers.IO) {
+            val file = File(path).takeIf { it.exists() } ?: throw FileNotFoundException("File with $path not found.")
 
-        return file.readText().also { contents ->
-            fileMap[path] = contents
+            file.readText().also { contents ->
+                fileMap[path] = contents
+            }
+        }
+    }
+
+    suspend fun fileExists(path: FilePath): Boolean {
+        fileMap[path]?.let { contents -> return contents.isNotBlank() }
+
+        // Otherwise grab it from the FS
+        return withContext(Dispatchers.IO) {
+            File(path).exists()
         }
     }
 
@@ -40,15 +51,17 @@ class DangerUtils {
     suspend fun linesWith(string: String, file: FilePath): List<Int> {
         val result = mutableListOf<Int>()
 
-        val lines = readFile(file).lines()
+        return withContext(Dispatchers.IO) {
+            val lines = readFile(file).lines()
 
-        lines.forEachIndexed { index, line ->
-            if (line.contains(string)) {
-                result.add(index + 1)
+            lines.forEachIndexed { index, line ->
+                if (line.contains(string)) {
+                    result.add(index + 1)
+                }
             }
-        }
 
-        return result
+            result
+        }
     }
 
     /**
@@ -61,15 +74,17 @@ class DangerUtils {
     suspend fun linesWith(regex: Regex, file: FilePath): List<Int> {
         val result = mutableListOf<Int>()
 
-        val lines = readFile(file).lines()
+        return withContext(Dispatchers.IO) {
+            val lines = readFile(file).lines()
 
-        lines.forEachIndexed { index, line ->
-            if (line.matches(regex)) {
-                result.add(index + 1)
+            lines.forEachIndexed { index, line ->
+                if (line.matches(regex)) {
+                    result.add(index + 1)
+                }
             }
-        }
 
-        return result
+            result
+        }
     }
 
     /**

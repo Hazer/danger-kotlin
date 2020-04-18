@@ -1,20 +1,18 @@
 package systems.danger.cmd.dangerfile
 
 import systems.danger.cmd.*
-import kotlinx.cinterop.CPointer
 import platform.posix.*
-import systems.danger.cmd.utils.credentials.CredentialsFetcher
-import systems.danger.utils.Environment
+import systems.danger.utils.EnvConfigs
 import systems.danger.utils.File
 
-object DangerFile: DangerFileBridge {
+object DangerFile : DangerFileBridge {
     private const val DANGERFILE_EXTENSION = ".df.kts"
     internal const val DANGERFILE = "Dangerfile$DANGERFILE_EXTENSION"
 
     override fun execute(inputJson: String, outputJson: String) {
         val dangerfile = dangerfileParameter(inputJson) ?: DANGERFILE
 
-        if(!dangerfile.endsWith(DANGERFILE_EXTENSION)) {
+        if (!dangerfile.endsWith(DANGERFILE_EXTENSION)) {
             println("The dangerfile is not valid, it must have '$DANGERFILE_EXTENSION' as extension")
             exit(1)
         }
@@ -23,19 +21,23 @@ object DangerFile: DangerFileBridge {
             "-script-templates",
             "systems.danger.kts.DangerFileScript",
             "-cp",
-            "/usr/local/lib/danger/danger-kotlin.jar",
+            EnvConfigs.customProcessorJar,
             "-script",
             dangerfile
         )
 
-        CredentialsFetcher.getCredentials()?.let {
-            args += "credentials=${it.toArg()}"
-        }
+        args += listOf(
+            "other",
+            "arguments",
+            "cliArgs"
+        )
 
-        args += inputJson
-        args += outputJson
+        args += listOf(
+            inputJson,
+            outputJson
+        )
 
-        Cmd().name("kotlinc").args(*args.toTypedArray()).exec()
+        Cmd().name(EnvConfigs.customKotlincPath).args(*args.toTypedArray()).exec()
     }
 
     internal fun createDefaultDangerFile() {

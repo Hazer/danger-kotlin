@@ -20,6 +20,10 @@ apply from: file('version.gradle')
 dependencies {
     provided "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     includeJar "org.jetbrains.kotlin:kotlin-main-kts:$versionKotlin"
+    includeJar "org.jetbrains.kotlin:kotlin-script-runtime:$versionKotlin"
+    includeJar "org.jetbrains.kotlin:kotlin-script-util:$versionKotlin"
+    includeJar "org.jetbrains.kotlin:kotlin-scripting-jvm:$versionKotlin"
+//    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$versionKotlin"
 }
 
 shadowJar {
@@ -27,10 +31,10 @@ shadowJar {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "1.6"
 }
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "1.6"
 }
 
 publishing {
