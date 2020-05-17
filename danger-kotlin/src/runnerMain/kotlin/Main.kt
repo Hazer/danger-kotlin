@@ -8,13 +8,27 @@ fun main(args: Array<String>) {
     if (args.isNotEmpty()) {
         when (val command = args.first()) {
             "ci", "local", "pr" -> {
-                DangerJS.process(command ,PROCESS_DANGER_KOTLIN, args.drop(1))
+                DangerJS.process(command, PROCESS_DANGER_KOTLIN, args.drop(1))
             }
             "runner" -> DangerKotlin.run()
-            "--version" -> println(VERSION)
+            "reset-status" -> DangerJS.resetStatus()
+            "--version" -> {
+                println(dangerVersion())
+                DangerJS.version()
+            }
             else -> return
         }
     } else {
         DangerKotlin.run()
     }
+}
+
+private fun dangerVersion(): String {
+    val lineEnding = VERSION.indices.joinToString("") { "=" }
+    return """
+
+=======================$lineEnding
+danger-kotlin version: $VERSION
+=======================$lineEnding
+""".trimIndent()
 }
