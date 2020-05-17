@@ -10,17 +10,25 @@ project.ext.versionMoshi = '1.8.0'
 project.ext.groupIdMoshi = 'com.squareup.moshi'
 project.ext.artifactIdMoshiKotlin = 'moshi-kotlin'
 
+project.ext.versionGitlab4j = '4.14.29'
+project.ext.groupIdGitlab4j = 'org.gitlab4j'
+project.ext.artifactIdGitlab4j = 'gitlab4j-api'
+
 project.ext.versionCoroutines = '1.3.6'
 project.ext.groupIdCoroutines = 'org.jetbrains.kotlinx'
 project.ext.artifactIdCoroutines = 'kotlinx-coroutines-jdk8'
 
 ext.utils = [
         moshi: "$groupIdMoshi:$artifactIdMoshiKotlin:$versionMoshi",
+        gitlab4j: "$groupIdGitlab4j:$artifactIdGitlab4j:$versionGitlab4j",
         coroutines: "$groupIdCoroutines:$artifactIdCoroutines:$versionCoroutines",
 ]
 
 ext.utilsDependencies = group {
     includeRecursiveJar(utils.moshi) {
+        exclude group: groupIdKotlin
+    }
+    includeRecursiveJar(utils.gitlab4j) {
         exclude group: groupIdKotlin
     }
     includeRecursiveJar(utils.coroutines) {

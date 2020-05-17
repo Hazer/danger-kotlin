@@ -1,13 +1,29 @@
 package systems.danger.kotlin
 
 import com.squareup.moshi.Json
+import org.gitlab4j.api.GitLabApi
 import java.util.*
+
+data class GitLabAPICredentials(
+    @Json(name ="host")
+    val host: String,
+    @Json(name ="token")
+    val token: String)
 
 data class GitLab(
     @Json(name="mr")
     val mergeRequest: GitLabMergeRequest,
     val metadata: GitLabMetadata
-)
+) {
+    internal var credentials: GitLabAPICredentials? = null
+    internal val gitLabApi: GitLabApi? by lazy {
+        credentials?.let {
+            GitLabApi(it.host, it.token)
+        }
+    }
+
+    val utils by lazy { GitLabUtils(this) }
+}
 
 data class GitLabDiffRefs (
     @Json(name="base_sha")
