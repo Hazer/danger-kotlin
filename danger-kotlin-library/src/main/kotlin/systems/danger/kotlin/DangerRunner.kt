@@ -1,10 +1,9 @@
 package systems.danger.kotlin
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import systems.danger.kotlin.sdk.DangerContext
 import systems.danger.kotlin.sdk.DangerPlugin
 import systems.danger.kotlin.sdk.Violation
@@ -63,7 +62,9 @@ object register {
 
 inline fun register(block: register.() -> Unit) = register.run(block)
 
-inline fun danger(args: Array<String>, block: DangerDSL.() -> Unit) = Danger(args).run(block)
+inline fun danger(args: Array<String>, crossinline block: suspend DangerDSL.() -> Unit) = runBlocking(Dispatchers.Main) {
+    Danger(args).block()
+}
 
 inline fun DangerDSL.onGitHub(onGitHub: GitHub.() -> Unit) {
     if (this.onGitHub) {
@@ -91,7 +92,12 @@ internal fun DangerPlugin.withContext(dangerContext: DangerContext) {
     context = dangerContext
 }
 
-private class DangerRunner(jsonInputFilePath: FilePath, jsonOutputPath: FilePath) : DangerContext {
+private data class Credentials(
+    @Json(name ="gitlab")
+    val gitLab: GitLabAPICredentials?
+)
+
+private class DangerRunner(jsonInputFilePath: FilePath, jsonOutputPath: FilePath, jsonCredentials: String?) : DangerContext {
 
     val jsonOutputFile: File = File(jsonOutputPath)
 
@@ -123,6 +129,11 @@ private class DangerRunner(jsonInputFilePath: FilePath, jsonOutputPath: FilePath
 
     init {
         this.danger = moshi.adapter(DSL::class.java).fromJson(jsonInputFilePath.readText())!!.danger
+        this.danger.onGitLab {
+            this.credentials = jsonCredentials?.let {
+                moshi.adapter(Credentials::class.java).fromJson(it)?.gitLab
+            }
+        }
 
         register.dangerPlugins.forEach {
             it.withContext(this)
@@ -232,10 +243,12 @@ private lateinit var dangerRunner: DangerRunner
 fun Danger(args: Array<String>): DangerDSL {
     val argsCount = args.count()
 
+    val credentials = args.find { it.startsWith("credentials=") }
+
     val jsonInputFilePath = args[argsCount - 2]
     val jsonOutputPath = args[argsCount - 1]
 
-    dangerRunner = DangerRunner(jsonInputFilePath, jsonOutputPath)
+    dangerRunner = DangerRunner(jsonInputFilePath, jsonOutputPath, credentials)
     return dangerRunner.danger
 }
 

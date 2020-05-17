@@ -3,6 +3,7 @@ package systems.danger.cmd.dangerfile
 import systems.danger.cmd.*
 import kotlinx.cinterop.CPointer
 import platform.posix.*
+import systems.danger.cmd.utils.credentials.CredentialsFetcher
 import systems.danger.utils.Environment
 import systems.danger.utils.File
 
@@ -18,16 +19,23 @@ object DangerFile: DangerFileBridge {
             exit(1)
         }
 
-        Cmd().name("kotlinc").args(
+        val args = mutableListOf(
             "-script-templates",
             "systems.danger.kts.DangerFileScript",
             "-cp",
             "/usr/local/lib/danger/danger-kotlin.jar",
             "-script",
-            dangerfile,
-            inputJson,
-            outputJson
-        ).exec()
+            dangerfile
+        )
+
+        CredentialsFetcher.getCredentials()?.let {
+            args += "credentials=${it.toArg()}"
+        }
+
+        args += inputJson
+        args += outputJson
+
+        Cmd().name("kotlinc").args(*args.toTypedArray()).exec()
     }
 
     internal fun createDefaultDangerFile() {
