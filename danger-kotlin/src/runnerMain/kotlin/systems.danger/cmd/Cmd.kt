@@ -15,7 +15,7 @@ class Cmd {
     }
 
     fun exec() {
-        exec(true)
+        exec(false)
     }
 
     fun exec(printCallLog: Boolean) {

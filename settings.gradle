@@ -8,3 +8,15 @@ include ':danger-kotlin'
 include ':danger-kotlin-library'
 include ':danger-kotlin-sdk'
 include ':danger-kotlin-kts'
+
+includeBuild('/Users/vithorio.polten/Projects/DangerPlugins/DetektDangerPlugin/') {
+    dependencySubstitution {
+        substitute module('io.vithor.danger.plugins:detekt-plugin') with project(':')
+    }
+}
+
+includeBuild('/Users/vithorio.polten/Projects/DangerPlugins/danger-kotlin-android-lint-plugin/') {
+    dependencySubstitution {
+        substitute module('io.vithor.danger.plugins:android-lint-plugin') with project(':')
+    }
+}

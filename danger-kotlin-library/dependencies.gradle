@@ -5,6 +5,8 @@ dependencies {
     provided "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     includeJar project(":danger-kotlin-sdk")
     includeJar project(":danger-kotlin-kts")
+    includeRecursiveJar "io.vithor.danger.plugins:detekt-plugin"
+    includeRecursiveJar "io.vithor.danger.plugins:android-lint-plugin"
     utilsDependencies()
     kotlinDependencies()
     testingDependencies()

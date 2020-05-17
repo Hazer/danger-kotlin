@@ -11,4 +11,21 @@ object DangerJS: DangerJSBridge {
             exec()
         }
     }
+
+    override fun version() {
+        print("Danger.js version: ")
+        with(Cmd()) {
+            name("$(which danger) --version")
+            args()
+            exec(false)
+        }
+    }
+
+    override fun resetStatus() {
+        with(Cmd()) {
+            name("$(which danger) reset-status")
+            args()
+            exec()
+        }
+    }
 }

@@ -1,17 +1,15 @@
 package systems.danger.kotlin
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import systems.danger.kotlin.sdk.DangerContext
-import systems.danger.kotlin.sdk.DangerPlugin
-import systems.danger.kotlin.sdk.Violation
+import kotlinx.coroutines.*
+import systems.danger.kotlin.sdk.*
 import java.io.File
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+
+typealias FilePath = String
 
 private fun FilePath.readText() = File(this).readText()
 
@@ -63,7 +61,23 @@ object register {
 
 inline fun register(block: register.() -> Unit) = register.run(block)
 
-inline fun danger(args: Array<String>, block: DangerDSL.() -> Unit) = Danger(args).run(block)
+inline fun danger(
+    args: Array<String>,
+    selfReport: Boolean = true,
+    crossinline block: suspend DangerDSL.() -> Unit
+) = runBlocking {
+    GlobalScope.launch {
+        if (selfReport) {
+            try {
+                Danger(args).block()
+            } catch (e: Throwable) {
+                reportScriptError(e)
+            }
+        } else {
+            Danger(args).block()
+        }
+    }.join()
+}
 
 inline fun DangerDSL.onGitHub(onGitHub: GitHub.() -> Unit) {
     if (this.onGitHub) {
@@ -91,7 +105,10 @@ internal fun DangerPlugin.withContext(dangerContext: DangerContext) {
     context = dangerContext
 }
 
-private class DangerRunner(jsonInputFilePath: FilePath, jsonOutputPath: FilePath) : DangerContext {
+private class DangerRunner(
+    jsonInputFilePath: FilePath,
+    jsonOutputPath: FilePath
+) : DangerContext {
 
     val jsonOutputFile: File = File(jsonOutputPath)
 
@@ -228,12 +245,45 @@ private class DangerRunner(jsonInputFilePath: FilePath, jsonOutputPath: FilePath
 }
 
 private lateinit var dangerRunner: DangerRunner
+private lateinit var jsonOutputPath: String
+
+@PublishedApi
+internal fun reportScriptError(exception: Throwable) {
+    when (exception) {
+        is DangerException -> {
+            reportScriptError(exception.toString(), exception.scriptFile, exception.scriptLine)
+        }
+        else -> {
+            val traceFiltered = DangerException.getTrace(exception)
+            reportScriptError(
+                "${DangerException.FAILURE_TITLE}Message: ${exception.message}\n```\n$traceFiltered\n```",
+                null,
+                null
+            )
+        }
+    }
+}
+
+@PublishedApi
+internal fun reportScriptError(message: String, file: String?, line: Int?) {
+    UnhandledExceptionHandler(jsonOutputPath).apply {
+        if (file.isNullOrBlank()) {
+            fail(message)
+        } else {
+            fail(message, file, line ?: 0)
+        }
+    }
+}
+
+object Environment {
+    operator fun get(key: String): String? = System.getenv(key)
+}
 
 fun Danger(args: Array<String>): DangerDSL {
     val argsCount = args.count()
 
     val jsonInputFilePath = args[argsCount - 2]
-    val jsonOutputPath = args[argsCount - 1]
+    jsonOutputPath = args[argsCount - 1]
 
     dangerRunner = DangerRunner(jsonInputFilePath, jsonOutputPath)
     return dangerRunner.danger

@@ -2,8 +2,7 @@ package systems.danger.kotlin
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-
-typealias FilePath = String
+import systems.danger.kotlin.FilePath
 
 /**
  * The git specific metadata for a pull request

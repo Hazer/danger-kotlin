@@ -1,13 +1,22 @@
 package systems.danger.kotlin
 
 import com.squareup.moshi.Json
+import org.gitlab4j.api.GitLabApi
 import java.util.*
 
 data class GitLab(
     @Json(name="mr")
     val mergeRequest: GitLabMergeRequest,
     val metadata: GitLabMetadata
-)
+) {
+    internal val gitLabApi: GitLabApi? by lazy {
+        CredentialsFetcher.gitLabCredentials().let {
+            GitLabApi(it.host, it.token)
+        }
+    }
+
+    val utils by lazy { GitLabUtils(this) }
+}
 
 data class GitLabDiffRefs (
     @Json(name="base_sha")
@@ -62,7 +71,7 @@ data class GitLabMergeRequest(
     @Json(name="merge_when_pipeline_succeeds")
     val mergeOnPipelineSuccess: Boolean,
     val milestone: GitLabMilestone?,
-    val pipeline: GitLabPipeline,
+    val pipeline: GitLabPipeline?,
     @Json(name="project_id")
     val projectId: String,
     val sha: String,
@@ -88,7 +97,12 @@ data class GitLabMergeRequest(
     @Json(name="web_url")
     val webUrl: String,
     @Json(name="work_in_progress")
-    val workInProgress: Boolean
+    val workInProgress: Boolean,
+    val squash: Boolean,
+    @Json(name="diverged_commits_count")
+    val divergedCommitsCount: Int,
+    @Json(name="rebase_in_progress")
+    val rebaseInProgress: Boolean
 ) {
     val canMerge: Boolean
         get() = this.userMergeData.canMerge
