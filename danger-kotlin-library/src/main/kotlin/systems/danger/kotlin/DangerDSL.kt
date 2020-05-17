@@ -30,5 +30,5 @@ data class DangerDSL(
         val onGitLab
             get() = _gitlab != null
 
-        val utils = Utils()
+        val utils = DangerUtils()
 }
