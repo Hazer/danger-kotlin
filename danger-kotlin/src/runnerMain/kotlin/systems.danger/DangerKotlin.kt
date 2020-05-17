@@ -1,6 +1,7 @@
 package systems.danger
 
 import systems.danger.cmd.dangerfile.DangerFile
+import systems.danger.utils.*
 
 object DangerKotlin {
     private const val FILE_TMP_OUTPUT_JSON = "danger_out.json"
@@ -9,16 +10,20 @@ object DangerKotlin {
         val dangerDSLPath = readLine()
 
         dangerDSLPath?.removePrefix("danger://dsl/")?.stripEndLine()?.let {
-            with(DangerFile) {
-                execute(it, FILE_TMP_OUTPUT_JSON)
+            val outputPath = FileSystem.createTempDirectory("danger_out").let {
+                File(it.path, FILE_TMP_OUTPUT_JSON).path
             }
 
-            printResult()
+            with(DangerFile) {
+                execute(it, outputPath.path)
+            }
+
+            printResult(outputPath)
         }
     }
 
-    private fun printResult() {
-        println("danger-results:/$FILE_TMP_OUTPUT_JSON")
+    private fun printResult(outputPath: Path) {
+        println("danger-results:/${outputPath.path}")
     }
 
     private fun String.stripEndLine() = trim('\u007F','\u0001', ' ')
