@@ -29,6 +29,16 @@ object DangerFile: DangerFileBridge {
             outputJson
         ).exec()
     }
+
+    internal fun createDefaultDangerFile() {
+        val dangerFile = File(DANGERFILE)
+        if (dangerFile.exists()) {
+            println("The $DANGERFILE already exists in this folder, just open it in your favorite editor")
+            exit(1)
+        }
+
+        dangerFile.writeText(DEFAULT_DANGERFILE_TEMPLATE.trimIndent())
+    }
 }
 
 private fun dangerfileParameter(inputJson: String): String? {

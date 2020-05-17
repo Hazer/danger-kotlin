@@ -1,4 +1,5 @@
 import systems.danger.DangerKotlin
+import systems.danger.cmd.dangerfile.DangerFile
 import systems.danger.cmd.dangerjs.DangerJS
 
 const val PROCESS_DANGER_KOTLIN = "danger-kotlin"
@@ -7,6 +8,7 @@ const val VERSION = "0.5.1"
 fun main(args: Array<String>) {
     if (args.isNotEmpty()) {
         when (val command = args.first()) {
+            "init" -> DangerFile.createDefaultDangerFile()
             "ci", "local", "pr" -> {
                 DangerJS.process(command, PROCESS_DANGER_KOTLIN, args.drop(1))
             }
