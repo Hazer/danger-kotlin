@@ -88,7 +88,12 @@ data class GitLabMergeRequest(
     @Json(name="web_url")
     val webUrl: String,
     @Json(name="work_in_progress")
-    val workInProgress: Boolean
+    val workInProgress: Boolean,
+    val squash: Boolean,
+    @Json(name="diverged_commits_count")
+    val divergedCommitsCount: Int,
+    @Json(name="rebase_in_progress")
+    val rebaseInProgress: Boolean
 ) {
     val canMerge: Boolean
         get() = this.userMergeData.canMerge
